@@ -1,0 +1,1 @@
+const CACHE='flora-v8-v1';const ASSETS=['catalog.php','catalog.css','catalog.js'];self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)))})

@@ -1,0 +1,1 @@
+<?php require __DIR__.'/config.php';if(current_user())audit('logout','users',(int)current_user()['id']);session_destroy();go('login.php');

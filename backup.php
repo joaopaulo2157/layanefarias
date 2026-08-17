@@ -1,0 +1,2 @@
+<?php
+require __DIR__.'/config.php';role(['admin']);if(!file_exists(DB_PATH))exit('Banco não encontrado.');header('Content-Type: application/octet-stream');header('Content-Disposition: attachment; filename="floragestor-v6-'.date('Y-m-d-His').'.sqlite"');readfile(DB_PATH);exit;

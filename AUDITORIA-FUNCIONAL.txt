@@ -1,0 +1,43 @@
+FLORAGESTOR ULTIMATE 1.0 — AUDITORIA FUNCIONAL
+================================================
+AUDITADO:
+- Sintaxe de todos os arquivos PHP
+- Estrutura consolidada do banco (install + migrações)
+- Criação de pedidos pelo PDV
+- Conversão de pedidos online
+- Estoque/ficha técnica
+- Financeiro/contas a receber
+- Produção
+- Entregas
+- Timeline
+- Central do Dia
+- Central de Inteligência
+- Navegação e versão visual
+
+CORREÇÕES APLICADAS:
+1. Identificação visual V8 -> Ultimate 1.0.
+2. Remoção de link duplicado de Backup.
+3. Central de Inteligência corrigida para contas a receber com status "Em aberto".
+4. PDV agora rejeita produto inexistente.
+5. PDV valida estoque antes de concluir.
+6. Produtos com ficha técnica validam estoque dos componentes.
+7. Limite de desconto aplicado para vendedor/caixa; admin/gerente continuam autorizados.
+8. Criação do pedido gera evento na Timeline.
+9. Mudança de status/produção/arte gera Timeline.
+10. Conversão de pedido online usa a mesma lógica de baixa por ficha técnica.
+11. Conversão online cria entrega quando necessário.
+12. Atualizações de entrega entram na Timeline.
+13. Pedido ganhou acesso direto à Timeline.
+
+VALIDAÇÃO DO BANCO:
+A combinação das estruturas install.php + migrate.php + migrate_v8.php +
+upgrade_ultimate.php + finalize_production.php foi executada em SQLite de teste.
+Resultado: 73 tabelas/estruturas criadas sem erro de SQL.
+
+OBSERVAÇÃO DO AMBIENTE:
+O PHP disponível no ambiente de auditoria não possui PDO_SQLite habilitado.
+Por isso, a validação de banco foi executada diretamente com SQLite e a sintaxe PHP
+foi validada separadamente com php -l.
+
+PRÓXIMO TESTE NA HOSPEDAGEM:
+Abra health-center.php. PDO SQLite deve aparecer como ATIVO.

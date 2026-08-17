@@ -1,0 +1,1 @@
+<?php require __DIR__.'/config.php';header('Content-Type:application/json');echo json_encode(['status'=>'ok','php'=>PHP_VERSION,'sqlite'=>extension_loaded('pdo_sqlite'),'storage_writable'=>is_writable(__DIR__.'/storage'),'https'=>!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off'],JSON_PRETTY_PRINT);

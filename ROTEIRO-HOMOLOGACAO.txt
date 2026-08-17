@@ -1,0 +1,43 @@
+ROTEIRO DE HOMOLOGAÇÃO — FLORAGESTOR ULTIMATE 1.0
+===================================================
+Objetivo: testar o sistema como uma semana real da loja.
+
+CENÁRIOS INCLUÍDOS
+1. Venda normal para retirada.
+2. Pedido com entrega local e pagamento parcial.
+3. Personalizado com produção futura.
+4. Pedido atrasado.
+5. Conta a pagar vencendo hoje.
+6. Lead aguardando follow-up.
+7. Orçamento sem fechamento.
+8. Produto abaixo do estoque mínimo.
+9. Recebível em aberto.
+10. Timeline de pedidos.
+
+TESTES OBRIGATÓRIOS
+- Login por perfil.
+- Limite de desconto.
+- Venda sem estoque.
+- Baixa de estoque.
+- Alteração do Kanban.
+- Aprovação de arte.
+- Entrada + saldo.
+- Entrega e conclusão.
+- Fechamento financeiro.
+- Central do Dia.
+- Central de Inteligência.
+- Backup.
+- Catálogo online.
+- Conversão de pedido online.
+- Responsividade mobile.
+
+COMO USAR
+1. Atualize o sistema normalmente.
+2. Entre como administrador.
+3. Abra /homologacao.php.
+4. Clique em "Criar cenários de homologação".
+5. Execute o roteiro na interface.
+6. Ao terminar, clique em "Limpar dados de homologação".
+
+IMPORTANTE
+Faça backup antes da homologação em banco que contenha dados reais.

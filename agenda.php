@@ -1,0 +1,6 @@
+<?php
+require __DIR__.'/ui.php';role(['admin','gerente','vendedor']);$p=db();$month=$_GET['month']??date('Y-m');$first=$month.'-01';$last=date('Y-m-t',strtotime($first));
+$s=$p->prepare("SELECT number,delivery_date,delivery_time,recipient_name,status FROM orders WHERE delivery_date BETWEEN ? AND ? ORDER BY delivery_date,delivery_time");$s->execute([$first,$last]);$orders=$s->fetchAll();
+$s=$p->prepare("SELECT c.name,cd.label,cd.event_date,cd.recipient FROM customer_dates cd JOIN customers c ON c.id=cd.customer_id WHERE substr(cd.event_date,6,5) BETWEEN substr(?,6,5) AND substr(?,6,5)");$s->execute([$first,$last]);$dates=$s->fetchAll();
+page_head('Agenda unificada');?>
+<div class="card"><form><label>Mês</label><input style="max-width:220px" type="month" name="month" value="<?=e($month)?>" onchange="this.form.submit()"></form></div><div class="grid g2"><div class="card"><h2>Entregas</h2><?php foreach($orders as $o):?><p><b><?=e($o['delivery_date'])?> <?=e($o['delivery_time'])?></b> — <?=e($o['number'])?> • <?=e($o['recipient_name'])?> • <?=e($o['status'])?></p><?php endforeach;?></div><div class="card"><h2>Datas especiais</h2><?php foreach($dates as $d):?><p><b><?=e($d['event_date'])?></b> — <?=e($d['name'])?> • <?=e($d['label'])?> • <?=e($d['recipient'])?></p><?php endforeach;?></div></div><?php page_foot();?>

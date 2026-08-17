@@ -1,0 +1,10 @@
+let cart=[];let fee=0;
+const br=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+function addProduct(p){const x=cart.find(i=>i.id===p.id);if(x)x.qty++;else cart.push({...p,qty:1,customization:'',text:''});renderCart()}
+function removeProduct(id){cart=cart.filter(x=>x.id!==id);renderCart()}
+function changeQty(id,d){const x=cart.find(i=>i.id===id);if(!x)return;x.qty=Math.max(1,x.qty+d);renderCart()}
+function subtotal(){return cart.reduce((a,x)=>a+x.price*x.qty,0)}
+function renderCart(){document.getElementById('cartItems').innerHTML=cart.map(x=>`<div class="cart-item"><b>${x.qty}x ${x.name}</b><button type="button" onclick="removeProduct(${x.id})">X</button><div><button type="button" onclick="changeQty(${x.id},-1)">-</button> <button type="button" onclick="changeQty(${x.id},1)">+</button></div></div>`).join('')||'<p>Seu carrinho está vazio.</p>';document.getElementById('subtotal').textContent=br(subtotal());document.getElementById('grand').textContent=br(subtotal()+fee);document.getElementById('itemsJson').value=JSON.stringify(cart)}
+function updateZone(){const s=document.getElementById('neighborhood'),o=s.options[s.selectedIndex];fee=parseFloat(o?.dataset?.fee||0);const min=parseFloat(o?.dataset?.min||0);document.getElementById('deliveryFee').textContent=br(fee);document.getElementById('grand').textContent=br(subtotal()+fee);if(min&&subtotal()<min)alert(`Pedido mínimo para este bairro: ${br(min)}`)}
+function filterProducts(){const q=document.getElementById('search').value.toLowerCase();document.querySelectorAll('.product').forEach(x=>x.style.display=x.dataset.search.includes(q)?'block':'none')}
+document.getElementById('orderForm')?.addEventListener('submit',e=>{if(!cart.length){e.preventDefault();alert('Adicione pelo menos um produto.');return}document.getElementById('itemsJson').value=JSON.stringify(cart)});renderCart();

@@ -1,0 +1,9 @@
+{
+  "name": "FloraGestor - Catálogo",
+  "short_name": "FloraGestor",
+  "start_url": "catalog.php",
+  "display": "standalone",
+  "background_color": "#fff8f5",
+  "theme_color": "#b45a64",
+  "icons": []
+}

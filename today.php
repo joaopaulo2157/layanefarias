@@ -1,0 +1,11 @@
+<?php require __DIR__.'/ui.php';auth();$p=db();$today=date('Y-m-d');
+$orders=$p->prepare("SELECT o.*,c.name customer FROM orders o LEFT JOIN customers c ON c.id=o.customer_id WHERE date(COALESCE(o.delivery_date,o.created_at))=? AND o.status!='Cancelado' ORDER BY o.delivery_time,o.id");$orders->execute([$today]);$orders=$orders->fetchAll();
+$low=$p->query("SELECT * FROM products WHERE active=1 AND stock<=min_stock ORDER BY stock LIMIT 12")->fetchAll();
+$pay=$p->prepare("SELECT * FROM accounts_payable WHERE status='Pendente' AND date(due_date)<=? ORDER BY due_date");$pay->execute([$today]);$pay=$pay->fetchAll();
+$follow=$p->prepare("SELECT * FROM leads WHERE next_followup IS NOT NULL AND date(next_followup)<=? AND stage NOT LIKE 'Fechado%' ORDER BY next_followup");$follow->execute([$today]);$follow=$follow->fetchAll();
+page_head('Central do Dia');?>
+<div class="grid g4"><div class="kpi"><small>Pedidos hoje</small><b><?=count($orders)?></b></div><div class="kpi"><small>Estoque crítico</small><b><?=count($low)?></b></div><div class="kpi"><small>Contas vencendo</small><b><?=count($pay)?></b></div><div class="kpi"><small>Follow-ups</small><b><?=count($follow)?></b></div></div>
+<div class="grid g2"><div class="card"><h2>📦 Produzir / entregar hoje</h2><?php foreach($orders as $x):?><div class="ticket"><b><?=e($x['number'])?> — <?=e($x['customer']?:$x['recipient_name'])?></b><small><?=e($x['delivery_time'])?> • <?=e($x['production_stage'])?> • <?=e($x['status'])?></small></div><?php endforeach;?></div>
+<div class="card"><h2>⚠️ Estoque crítico</h2><?php foreach($low as $x):?><p><b><?=e($x['name'])?></b> — <?=$x['stock']?> / mín. <?=$x['min_stock']?></p><?php endforeach;?></div>
+<div class="card"><h2>💳 Financeiro de hoje</h2><?php foreach($pay as $x):?><p><?=e($x['description'])?> <b><?=money($x['amount'])?></b> — <?=e($x['due_date'])?></p><?php endforeach;?></div>
+<div class="card"><h2>🎯 Contatos pendentes</h2><?php foreach($follow as $x):?><p><b><?=e($x['name'])?></b> — <?=e($x['whatsapp'])?> • <?=e($x['interest'])?></p><?php endforeach;?></div></div><?php page_foot();?>
