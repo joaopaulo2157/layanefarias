@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FloraGestor Ultimate HTML</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f6f4f3;color:#302827}
+:root{--p:#a94f60;--dark:#3c2930;--line:#e5dcda;--muted:#776b68;--white:#fff}
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}.side{background:#35262b;color:#fff;padding:18px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{font-size:20px;font-weight:900;margin-bottom:18px}.brand small{display:block;font-size:10px;font-weight:500;opacity:.65}
+.nav button{display:block;width:100%;border:0;background:transparent;color:#eee;text-align:left;padding:10px 12px;border-radius:9px;margin:2px 0;cursor:pointer}.nav button:hover,.nav button.active{background:#5a3741}
+.main{padding:24px;min-width:0}.top{display:flex;gap:10px;align-items:center;margin-bottom:18px}.top input{flex:1;padding:12px;border:1px solid var(--line);border-radius:10px}
+h1{font-size:26px;margin:0 0 16px}h2{font-size:17px}.grid{display:grid;gap:14px}.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+.card,.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}.kpi small{color:var(--muted);display:block}.kpi b{font-size:28px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--muted)}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;margin:4px 0 10px;background:#fff}textarea{min-height:80px}
+.btn,button.primary{border:0;border-radius:9px;padding:9px 12px;cursor:pointer;background:#eee}.primary{background:var(--p)!important;color:white;font-weight:700}.danger{background:#9f3030;color:white}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.ticket{padding:11px;border:1px solid var(--line);border-radius:10px;margin:7px 0}.ticket small{display:block;color:var(--muted);margin-top:4px}
+.badge{padding:4px 7px;border-radius:999px;background:#f0e5e7;font-size:11px}.hidden{display:none!important}
+.catalog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.product{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.toast{position:fixed;right:18px;bottom:18px;background:#292323;color:#fff;padding:12px 16px;border-radius:10px;display:none}
+@media(max-width:900px){.app{grid-template-columns:1fr}.side{position:relative;height:auto}.nav{display:flex;overflow:auto}.nav button{min-width:max-content}.g4,.g3,.g2,.catalog-grid{grid-template-columns:1fr}.main{padding:14px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+<div class="brand">🌷 FloraGestor <small>Ultimate HTML • LocalStorage</small></div>
+<div class="nav" id="nav"></div>
+</aside>
+<main class="main">
+<div class="top"><input id="globalSearch" placeholder="Busca global: cliente, pedido, produto..." oninput="globalSearch(this.value)"><button onclick="backup()">💾 Backup JSON</button></div>
+<div id="view"></div>
+</main></div><div class="toast" id="toast"></div>
+<script>
+const DBKEY='floragestor_html_v1';
+const seed={customers:[],products:[
+{id:1,sku:'FL-001',name:'Buquê de Rosas',category:'Flores',price:120,cost:55,stock:20,min:5},
+{id:2,sku:'CS-001',name:'Cesta Café Premium',category:'Cestas',price:189,cost:82,stock:15,min:3},
+{id:3,sku:'PR-001',name:'Caneca Personalizada',category:'Personalizados',price:49.9,cost:18,stock:30,min:5}
+],orders:[],quotes:[],leads:[],payables:[],deliveries:[],timeline:[],settings:{store:'Minha Floricultura',minMargin:30,maxDiscount:10}};
+let db=JSON.parse(localStorage.getItem(DBKEY)||'null')||seed;
+function save(){localStorage.setItem(DBKEY,JSON.stringify(db))}
+function id(a){return a.length?Math.max(...a.map(x=>x.id||0))+1:1}
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function toast(s){let t=document.querySelector('#toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',2200)}
+const pages=[
+['today','☀️ Central do Dia'],['dashboard','📊 Dashboard'],['pdv','🛒 PDV'],['customers','👥 Clientes'],['products','🌷 Produtos/Estoque'],['orders','📦 Pedidos'],['production','🧰 Produção'],['deliveries','🚚 Entregas'],['quotes','🧾 Orçamentos'],['leads','🎯 Funil'],['finance','💰 Financeiro'],['catalog','🛍️ Catálogo'],['intelligence','🧠 Inteligência'],['settings','⚙️ Configurações']
+];
+document.querySelector('#nav').innerHTML=pages.map(x=>`<button onclick="go('${x[0]}')" id="n-${x[0]}">${x[1]}</button>`).join('');
+function go(p){document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));document.querySelector('#n-'+p)?.classList.add('active');render[p]?.();location.hash=p}
+function card(t,b){return `<div class="card"><h2>${t}</h2>${b}</div>`}
+function dashboard(){
+ let revenue=db.orders.reduce((a,x)=>a+x.total,0),profit=db.orders.reduce((a,x)=>a+x.profit,0);
+ return `<h1>Dashboard</h1><div class="grid g4"><div class="kpi"><small>Faturamento</small><b>${money(revenue)}</b></div><div class="kpi"><small>Lucro estimado</small><b>${money(profit)}</b></div><div class="kpi"><small>Pedidos</small><b>${db.orders.length}</b></div><div class="kpi"><small>Clientes</small><b>${db.customers.length}</b></div></div>`;
+}
+const render={
+dashboard(){view.innerHTML=dashboard()},
+today(){let today=new Date().toISOString().slice(0,10),o=db.orders.filter(x=>x.deliveryDate===today),low=db.products.filter(x=>x.stock<=x.min),pay=db.payables.filter(x=>x.status!=='Pago'&&x.due<=today);view.innerHTML=`<h1>Central do Dia</h1><div class="grid g4"><div class="kpi"><small>Pedidos hoje</small><b>${o.length}</b></div><div class="kpi"><small>Estoque crítico</small><b>${low.length}</b></div><div class="kpi"><small>Contas</small><b>${pay.length}</b></div><div class="kpi"><small>Follow-ups</small><b>${db.leads.filter(x=>!x.stage.startsWith('Fechado')).length}</b></div></div><div class="grid g2">${card('Pedidos de hoje',o.map(x=>`<div class=ticket><b>${esc(x.number)}</b><small>${esc(x.customer)} • ${esc(x.status)}</small></div>`).join('')||'Nenhum')}${card('Estoque crítico',low.map(x=>`<p><b>${esc(x.name)}</b> — ${x.stock}/${x.min}</p>`).join('')||'Tudo normal')}</div>`},
+customers(){view.innerHTML=`<h1>Clientes</h1><div class="grid g2">${card('Novo cliente',`<input id=cname placeholder="Nome"><input id=cphone placeholder="WhatsApp"><input id=cemail placeholder="E-mail"><input id=cbday type=date><button class=primary onclick="addCustomer()">Salvar</button>`)}${card('Cadastro',`<table><tr><th>Nome</th><th>WhatsApp</th><th></th></tr>${db.customers.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.phone)}</td><td><button onclick="del('customers',${x.id})">Excluir</button></td></tr>`).join('')}</table>`)}</div>`},
+products(){view.innerHTML=`<h1>Produtos e estoque</h1><div class="grid g2">${card('Novo produto',`<input id=pname placeholder="Produto"><input id=psku placeholder="SKU"><input id=pcat placeholder="Categoria"><input id=pprice type=number step=.01 placeholder="Preço"><input id=pcost type=number step=.01 placeholder="Custo"><input id=pstock type=number placeholder="Estoque"><input id=pmin type=number placeholder="Mínimo"><button class=primary onclick="addProduct()">Salvar</button>`)}${card('Estoque',`<table><tr><th>Produto</th><th>Preço</th><th>Estoque</th></tr>${db.products.map(x=>`<tr><td>${esc(x.name)}<small>${esc(x.sku)}</small></td><td>${money(x.price)}</td><td>${x.stock<=x.min?'⚠️ ':''}${x.stock}</td></tr>`).join('')}</table>`)}</div>`},
+pdv(){view.innerHTML=`<h1>PDV</h1><div class="grid g2">${card('Nova venda',`<select id=sCustomer><option value="">Cliente avulso</option>${db.customers.map(x=>`<option>${esc(x.name)}</option>`)}</select><select id=sProduct>${db.products.map(x=>`<option value="${x.id}">${esc(x.name)} — ${money(x.price)} — estoque ${x.stock}</option>`)}</select><input id=sQty type=number value=1 min=1><input id=sDiscount type=number value=0 min=0 placeholder="Desconto R$"><select id=sDelivery><option>Retirada na loja</option><option>Entrega local</option></select><input id=sDate type=date><button class=primary onclick="sell()">Concluir venda</button>`)}${card('Últimas vendas',db.orders.slice().reverse().slice(0,8).map(x=>`<div class=ticket><b>${x.number} • ${money(x.total)}</b><small>${esc(x.customer)} • ${esc(x.status)}</small></div>`).join('')||'Nenhuma venda')}</div>`},
+orders(){view.innerHTML=`<h1>Pedidos</h1>${card('Pedidos',`<table><tr><th>Nº</th><th>Cliente</th><th>Total</th><th>Status</th><th>Produção</th></tr>${db.orders.map(x=>`<tr><td>${x.number}</td><td>${esc(x.customer)}</td><td>${money(x.total)}</td><td><select onchange="updOrder(${x.id},'status',this.value)">${['Recebido','Em produção','Pronto','Entregue','Cancelado'].map(s=>`<option ${s===x.status?'selected':''}>${s}</option>`)}</select></td><td>${esc(x.stage)}</td></tr>`).join('')}</table>`)}`},
+production(){let active=db.orders.filter(x=>!['Entregue','Cancelado'].includes(x.status));view.innerHTML=`<h1>Produção</h1><div class="grid g3">${['Novo','Separação','Montagem','Personalização','Conferência','Pronto'].map(stage=>card(stage,active.filter(x=>x.stage===stage).map(x=>`<div class=ticket><b>${x.number}</b><small>${esc(x.customer)}</small><select onchange="updOrder(${x.id},'stage',this.value)">${['Novo','Separação','Montagem','Personalização','Conferência','Pronto'].map(s=>`<option ${s===x.stage?'selected':''}>${s}</option>`)}</select></div>`).join('')||'—')).join('')}</div>`},
+deliveries(){let d=db.orders.filter(x=>x.delivery==='Entrega local');view.innerHTML=`<h1>Entregas</h1>${card('Roteiro',d.map(x=>`<div class=ticket><b>${x.number} • ${esc(x.customer)}</b><small>${esc(x.deliveryDate)} • ${esc(x.deliveryStatus||'Pendente')}</small><button onclick="delivery(${x.id})">Marcar entregue</button></div>`).join('')||'Nenhuma entrega')}`},
+quotes(){view.innerHTML=`<h1>Orçamentos</h1><div class="grid g2">${card('Novo orçamento',`<input id=qname placeholder="Cliente"><input id=qamount type=number step=.01 placeholder="Valor"><textarea id=qnotes placeholder="Observações"></textarea><button class=primary onclick="addQuote()">Criar</button>`)}${card('Orçamentos',db.quotes.map(x=>`<div class=ticket><b>${x.number} • ${money(x.amount)}</b><small>${esc(x.customer)} • ${x.status}</small></div>`).join('')||'Nenhum')}</div>`},
+leads(){let stages=['Novo lead','Contato feito','Orçamento enviado','Negociação','Fechado ganho','Fechado perdido'];view.innerHTML=`<h1>Funil comercial</h1>${card('Novo lead',`<div class="grid g3"><input id=lname placeholder=Nome><input id=lphone placeholder=WhatsApp><input id=linterest placeholder=Interesse></div><button class=primary onclick="addLead()">Adicionar</button>`)}<div class="grid g3">${stages.map(s=>card(s,db.leads.filter(x=>x.stage===s).map(x=>`<div class=ticket><b>${esc(x.name)}</b><small>${esc(x.phone)} • ${esc(x.interest)}</small><select onchange="leadStage(${x.id},this.value)">${stages.map(y=>`<option ${y===s?'selected':''}>${y}</option>`)}</select></div>`).join('')||'—')).join('')}</div>`},
+finance(){let rec=db.orders.reduce((a,x)=>a+x.total,0),pay=db.payables.filter(x=>x.status!=='Pago').reduce((a,x)=>a+x.amount,0);view.innerHTML=`<h1>Financeiro</h1><div class="grid g3"><div class=kpi><small>Vendas</small><b>${money(rec)}</b></div><div class=kpi><small>A pagar</small><b>${money(pay)}</b></div><div class=kpi><small>Resultado estimado</small><b>${money(rec-pay)}</b></div></div><div class=grid g2>${card('Nova conta',`<input id=fdesc placeholder=Descrição><input id=famount type=number step=.01 placeholder=Valor><input id=fdue type=date><button class=primary onclick="addPayable()">Adicionar</button>`)}${card('Contas a pagar',db.payables.map(x=>`<div class=ticket><b>${esc(x.desc)} • ${money(x.amount)}</b><small>${x.due} • ${x.status}</small>${x.status!=='Pago'?`<button onclick="pay(${x.id})">Pagar</button>`:''}</div>`).join('')||'Nenhuma')}</div>`},
+catalog(){view.innerHTML=`<h1>Catálogo</h1><p>Prévia pública dos produtos cadastrados.</p><div class=catalog-grid>${db.products.map(x=>`<div class=product><small>${esc(x.category)}</small><h2>${esc(x.name)}</h2><b>${money(x.price)}</b><p>Estoque: ${x.stock}</p></div>`).join('')}</div>`},
+intelligence(){let low=db.products.filter(x=>x.stock<=x.min),late=db.orders.filter(x=>x.deliveryDate&&x.deliveryDate<new Date().toISOString().slice(0,10)&&!['Entregue','Cancelado'].includes(x.status)),margin=db.products.filter(x=>x.price>0&&((x.price-x.cost)/x.price*100)<db.settings.minMargin);view.innerHTML=`<h1>Central de Inteligência</h1><div class=grid g3>${card('Estoque crítico',low.map(x=>`<p>⚠️ ${esc(x.name)}: ${x.stock}</p>`).join('')||'✓ Sem alertas')}${card('Pedidos atrasados',late.map(x=>`<p>⚠️ ${x.number} — ${x.deliveryDate}</p>`).join('')||'✓ Sem atrasos')}${card('Margem abaixo do mínimo',margin.map(x=>`<p>⚠️ ${esc(x.name)}</p>`).join('')||'✓ Margens adequadas')}</div>`},
+settings(){view.innerHTML=`<h1>Configurações</h1>${card('Loja',`<label>Nome</label><input id=setStore value="${esc(db.settings.store)}"><label>Margem mínima %</label><input id=setMargin type=number value="${db.settings.minMargin}"><label>Desconto máximo vendedor %</label><input id=setDisc type=number value="${db.settings.maxDiscount}"><button class=primary onclick="saveSettings()">Salvar</button><hr><button class=danger onclick="resetDB()">Apagar todos os dados locais</button>`)}`}
+};
+function addCustomer(){db.customers.push({id:id(db.customers),name:cname.value,phone:cphone.value,email:cemail.value,birthday:cbday.value});save();render.customers();toast('Cliente salvo')}
+function addProduct(){db.products.push({id:id(db.products),name:pname.value,sku:psku.value,category:pcat.value,price:+pprice.value,cost:+pcost.value,stock:+pstock.value,min:+pmin.value});save();render.products();toast('Produto salvo')}
+function sell(){let p=db.products.find(x=>x.id===+sProduct.value),q=Math.max(1,+sQty.value),disc=Math.max(0,+sDiscount.value);if(!p||p.stock<q)return alert('Estoque insuficiente.');let sub=p.price*q;if(sub&&disc/sub*100>db.settings.maxDiscount)return alert('Desconto acima do limite configurado.');p.stock-=q;let n='PED-'+String(db.orders.length+1).padStart(5,'0'),fee=sDelivery.value==='Entrega local'?10:0,total=sub-disc+fee,o={id:id(db.orders),number:n,customer:sCustomer.value||'Cliente avulso',product:p.name,qty:q,subtotal:sub,discount:disc,deliveryFee:fee,total,cost:p.cost*q,profit:total-p.cost*q,status:'Recebido',stage:'Novo',delivery:sDelivery.value,deliveryDate:sDate.value,deliveryStatus:'Pendente'};db.orders.push(o);db.timeline.push({id:id(db.timeline),orderId:o.id,title:'Pedido criado',date:new Date().toISOString()});save();render.pdv();toast('Venda concluída')}
+function updOrder(i,k,v){let o=db.orders.find(x=>x.id===i);o[k]=v;db.timeline.push({id:id(db.timeline),orderId:i,title:`${k}: ${v}`,date:new Date().toISOString()});save();render[k==='stage'?'production':'orders']()}
+function delivery(i){let o=db.orders.find(x=>x.id===i);o.deliveryStatus='Entregue';o.status='Entregue';db.timeline.push({id:id(db.timeline),orderId:i,title:'Entrega concluída',date:new Date().toISOString()});save();render.deliveries();toast('Entrega concluída')}
+function addQuote(){db.quotes.push({id:id(db.quotes),number:'ORC-'+String(db.quotes.length+1).padStart(5,'0'),customer:qname.value,amount:+qamount.value,notes:qnotes.value,status:'Em aberto'});save();render.quotes()}
+function addLead(){db.leads.push({id:id(db.leads),name:lname.value,phone:lphone.value,interest:linterest.value,stage:'Novo lead'});save();render.leads()}
+function leadStage(i,s){db.leads.find(x=>x.id===i).stage=s;save();render.leads()}
+function addPayable(){db.payables.push({id:id(db.payables),desc:fdesc.value,amount:+famount.value,due:fdue.value,status:'Pendente'});save();render.finance()}
+function pay(i){db.payables.find(x=>x.id===i).status='Pago';save();render.finance()}
+function saveSettings(){db.settings.store=setStore.value;db.settings.minMargin=+setMargin.value;db.settings.maxDiscount=+setDisc.value;save();toast('Configurações salvas')}
+function del(a,i){db[a]=db[a].filter(x=>x.id!==i);save();render[a]()}
+function globalSearch(q){if(q.length<2)return;let hits=[];db.customers.filter(x=>JSON.stringify(x).toLowerCase().includes(q.toLowerCase())).forEach(x=>hits.push('Cliente: '+x.name));db.products.filter(x=>JSON.stringify(x).toLowerCase().includes(q.toLowerCase())).forEach(x=>hits.push('Produto: '+x.name));db.orders.filter(x=>JSON.stringify(x).toLowerCase().includes(q.toLowerCase())).forEach(x=>hits.push('Pedido: '+x.number));view.innerHTML=`<h1>Busca</h1>${card('Resultados',hits.map(x=>`<p>${esc(x)}</p>`).join('')||'Nenhum resultado')}`}
+function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='floragestor-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+function resetDB(){if(confirm('Apagar todos os dados salvos neste navegador?')){localStorage.removeItem(DBKEY);location.reload()}}
+go(location.hash.slice(1)||'today');
+</script>
+</body></html>
